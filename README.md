@@ -7,6 +7,7 @@ The primary purpose of this tool is:
 File .dae can be either only fixed, or fixed and converted into a .scn.
 
 dae_fix_to_scn makes shapekeys in Blender-exported Collada (.dae) available to Apple SceneKit. With this tool you will be able to use models with armature and shapekeys.
+For more information you can read instruction here https://www.slimp.tv/post/upload-your-3d-model
 
 ## Getting Started
 
