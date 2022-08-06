@@ -34,6 +34,65 @@ class DaeFix {
   List<String> anim_names = [];
   //List of animations
   Map<String, List<String>> anim = {};
+  //do instance_controller
+  bool ic = false;
+
+  static Map<String, String> controller_target = {};
+  static String controller_morh_name = "";
+  static Map<String, String> AR_Apple = {
+    "browInnerUp": "browInnerUp",
+    "browDownLeft": "browDown_L",
+    "browDownRight": "browDown_R",
+    "browOuterUpLeft": "browOuterUp_L",
+    "browOuterUpRight": "browOuterUp_R",
+    "eyeLookUpLeft": "eyeLookUp_L",
+    "eyeLookUpRight": "eyeLookUp_R",
+    "eyeLookDownLeft": "eyeLookDown_L",
+    "eyeLookDownRight": "eyeLookDown_R",
+    "eyeLookInLeft": "eyeLookIn_L",
+    "eyeLookInRight": "eyeLookIn_R",
+    "eyeLookOutLeft": "eyeLookOut_L",
+    "eyeLookOutRight": "eyeLookOut_R",
+    "eyeBlinkLeft": "eyeBlink_L",
+    "eyeBlinkRight": "eyeBlink_R",
+    "eyeSquintLeft": "eyeSquint_L",
+    "eyeSquintRight": "eyeSquint_R",
+    "eyeWideLeft": "eyeWide_L",
+    "eyeWideRight": "eyeWide_R",
+    "cheekPuff": "cheekPuff",
+    "cheekSquintLeft": "cheekSquint_L",
+    "cheekSquintRight": "cheekSquint_R",
+    "noseSneerLeft": "noseSneer_L",
+    "noseSneerRight": "noseSneer_R",
+    "jawOpen": "jawOpen",
+    "jawForward": "jawForward",
+    "jawLeft": "jawLeft",
+    "jawRight": "jawRight",
+    "mouthFunnel": "mouthFunnel",
+    "mouthPucker": "mouthPucker",
+    "mouthLeft": "mouthLeft",
+    "mouthRight": "mouthRight",
+    "mouthRollUpper": "mouthRollUpper",
+    "mouthRollLower": "mouthRollLower",
+    "mouthShrugUpper": "mouthShrugUpper",
+    "mouthShrugLower": "mouthShrugLower",
+    "mouthClose": "mouthClose",
+    "mouthSmileLeft": "mouthSmile_L",
+    "mouthSmileRight": "mouthSmile_R",
+    "mouthFrownLeft": "mouthFrown_L",
+    "mouthFrownRight": "mouthFrown_R",
+    "mouthDimpleLeft": "mouthDimple_L",
+    "mouthDimpleRight": "mouthDimple_R",
+    "mouthUpperUpLeft": "mouthUpperUp_L",
+    "mouthUpperUpRight": "mouthUpperUp_R",
+    "mouthLowerDownLeft": "mouthLowerDown_L",
+    "mouthLowerDownRight": "mouthLowerDown_R",
+    "mouthPressLeft": "mouthPress_L",
+    "mouthPressRight": "mouthPress_R",
+    "mouthStretchLeft": "mouthStretch_L",
+    "mouthStretchRight": "mouthStretch_R",
+    "tongueOut": "tongueOut",
+  };
 
   Future<String> main(String path, bool convertRequired) async {
     // Gson gson = new Gson();
@@ -47,25 +106,27 @@ class DaeFix {
     //copyFileUsingStream(file_sourse,file_dest);
     print(path.replaceAll(".dae", ".scn"));
     //read string by string the copy of -fixed.dae file
-    await ReadWithBufferedReader(file_sourse, file_dest);
-    if (convertRequired) {
-      await Process.run(
-        "xcrun",
-        [
-          "scntool",
-          "--convert",
-          path.replaceAll(".dae", "-fixed.dae"),
-          "--format",
-          "scn",
-          "--output",
-          path.replaceAll(".dae", ".scn"),
-          "--force-y-up",
-          "--force-interleaved",
-          "--resources-folder-path = ./",
-          "--asset-catalog-path = ./"
-        ],
-      ).then((value) => print(value.stdout));
-    }
+    await ReadWithBufferedReader(file_sourse, file_dest).then((value) {
+      if (convertRequired) {
+        Process.run(
+          "xcrun",
+          [
+            "scntool",
+            "--convert",
+            path.replaceAll(".dae", "-fixed.dae"),
+            "--format",
+            "scn",
+            "--output",
+            path.replaceAll(".dae", ".scn"),
+            "--force-y-up",
+            "--force-interleaved",
+            "--resources-folder-path = ./",
+            "--asset-catalog-path = ./"
+          ],
+        ).then((value) => print(value.stdout));
+      }
+    });
+
     String json = jsonEncode(configure());
 
     print(bs_custom);
@@ -246,24 +307,46 @@ class DaeFix {
     }
     String controller_name = "";
 
+    if (string.contains("<IDREF_array")) {
+      for (String ar in AR_Apple.keys) {
+        string = string.replaceAll(ar, AR_Apple[ar] ?? ar);
+      }
+    }
+
     //regrep expression to extract controller name
     Pattern pattern = RegExp("\"(.*?)\"");
     final matcher = pattern.allMatches(string);
 
     //when we found controller we check if it skin (armature) controller
     //and if so we check if there is a morphs on object of controller
-    if (string.contains("<controller") && string.contains("-skin\"")) {
-      if (matcher.isNotEmpty) {
-        controller_name = matcher.first.group(1)!;
-        for (String m in morph) {
-          if (controller_name.contains(m.replaceAll("-morph", "")))
-          //remember the name of morph (which need to correct url)
-          {
-            skin = m;
+    if (string.contains("<controller")) {
+      if (string.contains("-morph\"")) {
+        if (matcher.isNotEmpty) {
+          controller_name = matcher.first.group(1)!;
+
+          controller_morh_name = controller_name;
+        }
+      }
+      if (string.contains("-skin\"")) {
+        if (matcher.isNotEmpty) {
+          controller_name = matcher.first.group(1)!;
+          for (String m in morph) {
+            if (controller_name.contains(m.replaceAll("-morph", "")))
+            //remember the name of morph (which need to correct url)
+            {
+              skin = m;
+            }
           }
         }
       }
     }
+
+    if (!controller_morh_name.isEmpty && string.contains("<morph source")) {
+      if (matcher.isNotEmpty) {
+        controller_target[controller_morh_name] = matcher.first.group(1)!;
+      }
+    }
+
     //if string starts with <skin sourse then it is string that we should modify
     if (!skin.isEmpty && string.contains("<skin source")) {
       if (matcher.isNotEmpty) {
@@ -327,9 +410,20 @@ class DaeFix {
     }
 
     if (string.contains("instance_geometry")) {
-      return string.replaceAll("geometry", "controller");
+      for (String ct in controller_target.keys) {
+        if (string.contains(controller_target[ct] ?? '!!!!')) {
+          ic = true;
+          return string
+              .replaceAll("geometry", "controller")
+              .replaceAll(controller_target[ct] ?? '!!!!', "#" + ct);
+        }
+      }
+      if (ic) {
+        ic = false;
+        return string.replaceAll("geometry", "controller");
+      }
+      // return string.replaceAll("geometry", "controller");
     }
-
     return string;
   }
 
@@ -363,61 +457,6 @@ class DaeFix {
   }
 
   void configureList(String line) {
-    List<String> AR_Apple = [
-      "browInnerUp",
-      "browDown_L",
-      "browDown_R",
-      "browOuterUp_L",
-      "browOuterUp_R",
-      "eyeLookUp_L",
-      "eyeLookUp_R",
-      "eyeLookDown_L",
-      "eyeLookDown_R",
-      "eyeLookIn_L",
-      "eyeLookIn_R",
-      "eyeLookOut_L",
-      "eyeLookOut_R",
-      "eyeBlink_L",
-      "eyeBlink_R",
-      "eyeSquint_L",
-      "eyeSquint_R",
-      "eyeWide_L",
-      "eyeWide_R",
-      "cheekPuff",
-      "cheekSquint_L",
-      "cheekSquint_R",
-      "noseSneer_L",
-      "noseSneer_R",
-      "jawOpen",
-      "jawForward",
-      "jawLeft",
-      "jawRight",
-      "mouthFunnel",
-      "mouthPucker",
-      "mouthLeft",
-      "mouthRight",
-      "mouthRollUpper",
-      "mouthRollLower",
-      "mouthShrugUpper",
-      "mouthShrugLower",
-      "mouthClose",
-      "mouthSmile_L",
-      "mouthSmile_R",
-      "mouthFrown_L",
-      "mouthFrown_R",
-      "mouthDimple_L",
-      "mouthDimple_R",
-      "mouthUpperUp_L",
-      "mouthUpperUp_R",
-      "mouthLowerDown_L",
-      "mouthLowerDown_R",
-      "mouthPress_L",
-      "mouthPress_R",
-      "mouthStretch_L",
-      "mouthStretch_R",
-      "tongueOut",
-    ];
-
     //for mesh name with blendshapes
     String mesh_names = "";
     //names of blendhapes on certain mesh (Custom)
@@ -452,9 +491,9 @@ class DaeFix {
       bs_names_AR.addAll(bs_names);
 
       //remove AR bs
-      bs_names.removeWhere((n) => (AR_Apple.contains(n)));
+      bs_names.removeWhere((n) => (AR_Apple[n]?.contains(n) ?? false));
       //remove custom bs
-      bs_names_AR.removeWhere((n) => (!AR_Apple.contains(n)));
+      bs_names_AR.removeWhere((n) => (!(AR_Apple[n]?.contains(n) ?? false)));
 
       bs_custom[mesh_names] = bs_names;
       bs_AR[mesh_names] = bs_names_AR;

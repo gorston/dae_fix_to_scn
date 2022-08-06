@@ -1,16 +1,17 @@
 # dae_fix_to_scn
 
-A new Flutter project.
+The primary purpose of this tool is:
+- Blender export fixing to make import file to Apple SceneKit able;
+- fast converting simple models to .scn.
+
+File .dae can be either only fixed, or fixed and converted into a .scn.
+
+dae_fix_to_scn makes shapekeys in Blender-exported Collada (.dae) available to Apple SceneKit. With this tool will be able to use models with armature and shapekeys.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Run the app and choose the file.
 
-A few resources to get you started if this is your first Flutter project:
+## Apple morphers (blendshapes)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+To be able to track face tracking on the iPhone, you must follow to the names of blendshapes in accordance with the Apple documentation
