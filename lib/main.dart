@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
@@ -91,28 +93,30 @@ class _MyHomePageState extends State<MyHomePage> {
               message,
               style: Theme.of(context).textTheme.headline4,
             ),
-            Padding(
-              padding: const EdgeInsets.all(58.0),
-              child: GestureDetector(
-                onTap: () async {
-                  final file = await FilePicker.platform.pickFiles();
-                  if (file?.paths.first != null) {
-                    final path = await DaeFix().main(file!.paths.first!, true);
-                    setState(() {
-                      message = path;
-                    });
-                  }
-                },
-                child: const Card(
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Text("Fix and convert to SCN"),
+            if (Platform.isMacOS)
+              Padding(
+                padding: const EdgeInsets.all(58.0),
+                child: GestureDetector(
+                  onTap: () async {
+                    final file = await FilePicker.platform.pickFiles();
+                    if (file?.paths.first != null) {
+                      final path =
+                          await DaeFix().main(file!.paths.first!, true);
+                      setState(() {
+                        message = path;
+                      });
+                    }
+                  },
+                  child: const Card(
+                    child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text("Fix and convert to SCN"),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
             Padding(
               padding: const EdgeInsets.all(58.0),
               child: GestureDetector(

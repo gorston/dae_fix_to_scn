@@ -107,7 +107,7 @@ class DaeFix {
     print(path.replaceAll(".dae", ".scn"));
     //read string by string the copy of -fixed.dae file
     await ReadWithBufferedReader(file_sourse, file_dest).then((value) {
-      if (convertRequired) {
+      if (convertRequired && Platform.isMacOS) {
         Process.run(
           "xcrun",
           [
@@ -133,7 +133,7 @@ class DaeFix {
     print(bs_AR);
     print(anim);
 
-    return "Done.\nPath to ${convertRequired ? "SCN" : "DAE"} file - ${path.replaceAll(".dae", convertRequired ? ".scn" : "-fixed.dae")}";
+    return "Done. You may proceed with next file";
   }
 
   //read file string by string
